@@ -125,6 +125,74 @@
   }
   .celda.sel{background:var(--sol);}
   .celda.ok{background:var(--hierba); color:var(--blanco);}
+  .celda.error{background:var(--tierra); color:var(--blanco);}
+  @keyframes sacude{
+    0%,100%{transform:translateX(0);}
+    25%{transform:translateX(-4px);}
+    75%{transform:translateX(4px);}
+  }
+  .celda.error{animation:sacude 0.25s;}
+
+  .contador{
+    text-align:center; font-family:'Baloo 2',sans-serif; font-weight:700;
+    color:#5c5548; margin-bottom:0.6rem;
+  }
+  .vidas{letter-spacing:0.2em;}
+
+  /* ---------- ORDENA LA LEYENDA ---------- */
+  #respuesta-orden{
+    display:flex; flex-direction:column; gap:0.6rem; margin-bottom:1.2rem;
+  }
+  .slot-orden{
+    min-height:2.8rem; border:3px dashed #c9bfa8; border-radius:14px;
+    display:flex; align-items:center; padding:0.5rem 0.9rem; font-weight:700;
+    background:rgba(255,201,60,0.08); color:#9a9284; gap:0.6rem;
+  }
+  .slot-orden .num{
+    font-family:'Baloo 2',sans-serif; font-weight:800; color:var(--tierra);
+    flex-shrink:0;
+  }
+  .slot-orden.lleno{border-style:solid; border-color:var(--tinta); color:var(--tinta); background:var(--blanco);}
+  .slot-orden.correcto{border-color:var(--hierba); background:rgba(76,175,125,0.15); color:var(--tinta);}
+  .slot-orden.incorrecto{border-color:var(--tierra); background:rgba(255,122,61,0.15); color:var(--tinta);}
+
+  #pool-orden{display:flex; flex-wrap:wrap; gap:0.6rem; justify-content:center;}
+  .chip-orden{
+    font-weight:700; border:3px solid var(--tinta); border-radius:14px;
+    padding:0.55rem 0.9rem; background:var(--noche); color:var(--crema);
+    cursor:pointer; box-shadow:3px 3px 0 rgba(0,0,0,0.2); text-align:left;
+    max-width:280px; transition:transform 0.12s;
+  }
+  .chip-orden:hover{transform:translate(-2px,-2px);}
+  .chip-orden.usado{display:none;}
+
+  /* ---------- TRIVIA ---------- */
+  #progreso-trivia{
+    text-align:center; font-family:'Baloo 2',sans-serif; font-weight:700;
+    color:#5c5548; margin-bottom:0.4rem;
+  }
+  #pregunta-trivia{
+    text-align:center; font-family:'Baloo 2',sans-serif; font-weight:800;
+    font-size:1.25rem; margin:0.6rem 0 1.2rem; color:var(--tinta);
+  }
+  #opciones-trivia{
+    display:grid; grid-template-columns:1fr 1fr; gap:0.7rem;
+  }
+  @media(max-width:480px){#opciones-trivia{grid-template-columns:1fr;}}
+  .opcion-trivia{
+    font-family:'Nunito',sans-serif; font-weight:700; font-size:1rem;
+    border:3px solid var(--tinta); border-radius:16px; padding:0.8rem 1rem;
+    background:var(--blanco); cursor:pointer; box-shadow:3px 3px 0 var(--tinta);
+    transition:transform 0.12s;
+  }
+  .opcion-trivia:hover:not(:disabled){transform:translate(-2px,-2px);}
+  .opcion-trivia:disabled{cursor:default;}
+  .opcion-trivia.correcta{background:var(--hierba); color:var(--blanco);}
+  .opcion-trivia.incorrecta{background:var(--tierra); color:var(--blanco);}
+  #btn-siguiente-trivia{display:none;}
+  .pantalla-final-trivia{
+    text-align:center; font-family:'Baloo 2',sans-serif; font-weight:700; font-size:1.3rem;
+  }
 
   footer{text-align:center; padding:2rem 0; color:#9a9284; font-weight:700; font-size:0.9rem;}
 </style>
@@ -135,7 +203,7 @@
   <div class="wrap">
     <span class="hero-badge">🐍⛰️🌊 ¡A jugar en mapudungun!</span>
     <h1>Juega con <span class="a">Kai Kai</span> y <span class="b">Treng Treng</span></h1>
-    <p>Tres juegos para aprender palabras en mapudungun mientras recorres la leyenda de las serpientes que formaron las montañas.</p>
+    <p>Cinco juegos para aprender palabras en mapudungun mientras recorres la leyenda de las serpientes que formaron las montañas.</p>
   </div>
 </header>
 
@@ -144,6 +212,8 @@
     <button class="tab-btn activo" data-juego="memoria">🧠 Memoria del bosque</button>
     <button class="tab-btn" data-juego="adivina">🔤 Adivina la palabra</button>
     <button class="tab-btn" data-juego="sopa">🌲 Encuentra a Pewen</button>
+    <button class="tab-btn" data-juego="orden">📜 Ordena la leyenda</button>
+    <button class="tab-btn" data-juego="trivia">🧩 Trivia mapuche</button>
   </nav>
 
   <!-- MEMORIA -->
@@ -151,6 +221,7 @@
     <div class="panel-juego">
       <h2>🧠 Memoria del bosque</h2>
       <p class="sub">Encuentra cada par: el dibujo y su nombre en mapudungun.</p>
+      <p class="contador" id="contador-memoria"></p>
       <div id="grid-memoria"></div>
       <p class="msg" id="msg-memoria"></p>
     </div>
@@ -162,6 +233,7 @@
       <h2>🔤 Adivina la palabra</h2>
       <p class="sub">Descubre la palabra mapuche letra por letra.</p>
       <p class="pista" id="pista"></p>
+      <p class="contador">Vidas: <span class="vidas" id="vidas-adivina"></span></p>
       <p id="palabra-oculta"></p>
       <div id="teclado"></div>
       <p class="msg" id="msg-adivina"></p>
@@ -177,6 +249,35 @@
       <div id="grid-sopa"></div>
       <p class="msg" id="msg-sopa"></p>
       <button class="btn-reiniciar" id="btn-reiniciar-sopa">🔄 Intentar de nuevo</button>
+    </div>
+  </section>
+
+  <!-- ORDENA LA LEYENDA -->
+  <section class="juego" id="orden">
+    <div class="panel-juego">
+      <h2>📜 Ordena la leyenda</h2>
+      <p class="sub">Toca los sucesos en el orden en que ocurren en la leyenda de Kai Kai y Treng Treng.</p>
+      <div id="respuesta-orden"></div>
+      <div id="pool-orden"></div>
+      <p class="msg" id="msg-orden"></p>
+      <button class="btn-reiniciar" id="btn-revisar-orden">✅ Revisar orden</button>
+      <button class="btn-reiniciar" id="btn-reiniciar-orden">🔄 Mezclar de nuevo</button>
+    </div>
+  </section>
+
+  <!-- TRIVIA -->
+  <section class="juego" id="trivia">
+    <div class="panel-juego">
+      <h2>🧩 Trivia mapuche</h2>
+      <p class="sub">Responde preguntas sobre las palabras y la leyenda de Kai Kai y Treng Treng.</p>
+      <p id="progreso-trivia"></p>
+      <div id="cuerpo-trivia">
+        <p id="pregunta-trivia"></p>
+        <div id="opciones-trivia"></div>
+      </div>
+      <p class="msg" id="msg-trivia"></p>
+      <button class="btn-reiniciar" id="btn-siguiente-trivia">➡️ Siguiente</button>
+      <button class="btn-reiniciar" id="btn-reiniciar-trivia">🔄 Jugar de nuevo</button>
     </div>
   </section>
 </div>
@@ -210,11 +311,17 @@ const vocabMemoria = [
 
 let cartasMemoria = [], reveladas = [], bloqueado = false, paresOk = 0;
 
+function actualizarContadorMemoria(){
+  document.getElementById('contador-memoria').textContent =
+    `Pares encontrados: ${paresOk} / ${vocabMemoria.length}`;
+}
+
 function iniciarMemoria(){
   const grid = document.getElementById('grid-memoria');
   const msg = document.getElementById('msg-memoria');
   msg.textContent = '';
   paresOk = 0; reveladas = [];
+  actualizarContadorMemoria();
   cartasMemoria = vocabMemoria.flatMap((v,i)=>[
     {key:i, tipo:'emoji', texto:v.emoji},
     {key:i, tipo:'palabra', texto:v.mp}
@@ -248,6 +355,7 @@ function voltearCarta(el){
         a.el.classList.add('acertada'); b.el.classList.add('acertada');
         a.el.classList.remove('revelada'); b.el.classList.remove('revelada');
         reveladas = []; bloqueado = false; paresOk++;
+        actualizarContadorMemoria();
         if(paresOk === vocabMemoria.length){
           document.getElementById('msg-memoria').textContent = '¡Muy bien! Encontraste todos los pares 🎉';
         }
@@ -273,23 +381,33 @@ const palabrasAdivina = [
   {mp:'KOYAM', hint:'Roble 🌳'},
 ];
 
-let secreto = '', mostrado = [];
+let secreto = '', mostrado = [], vidasAdivina = 6, botonesLetra = {}, juegoAdivinaActivo = true;
+const MAX_VIDAS = 6;
+
+function actualizarVidas(){
+  document.getElementById('vidas-adivina').textContent = '🐍'.repeat(vidasAdivina) + '💀'.repeat(MAX_VIDAS - vidasAdivina);
+}
 
 function iniciarAdivina(){
   const elegido = palabrasAdivina[Math.floor(Math.random()*palabrasAdivina.length)];
   secreto = elegido.mp;
   mostrado = [...secreto].map(()=> '_');
+  vidasAdivina = MAX_VIDAS;
+  juegoAdivinaActivo = true;
   document.getElementById('pista').textContent = '💡 Pista: ' + elegido.hint;
   document.getElementById('msg-adivina').textContent = '';
+  actualizarVidas();
   dibujarPalabra();
 
   const teclado = document.getElementById('teclado');
   teclado.innerHTML = '';
+  botonesLetra = {};
   'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'.split('').forEach(letra=>{
     const b = document.createElement('button');
     b.textContent = letra;
     b.addEventListener('click', ()=>probarLetra(letra, b));
     teclado.appendChild(b);
+    botonesLetra[letra] = b;
   });
 }
 
@@ -298,6 +416,7 @@ function dibujarPalabra(){
 }
 
 function probarLetra(letra, btn){
+  if(!juegoAdivinaActivo || btn.disabled) return;
   btn.disabled = true;
   let acierto = false;
   [...secreto].forEach((c,i)=>{
@@ -307,11 +426,31 @@ function probarLetra(letra, btn){
   dibujarPalabra();
   if(mostrado.join('') === secreto){
     document.getElementById('msg-adivina').textContent = '¡Correcto! ' + secreto + ' 🎉';
+    juegoAdivinaActivo = false;
     document.querySelectorAll('#teclado button').forEach(b=>b.disabled = true);
+    return;
+  }
+  if(!acierto){
+    vidasAdivina--;
+    actualizarVidas();
+    if(vidasAdivina === 0){
+      juegoAdivinaActivo = false;
+      mostrado = [...secreto];
+      dibujarPalabra();
+      document.getElementById('msg-adivina').textContent = 'Casi... la palabra era ' + secreto + '. ¡Prueba otra! 🌱';
+      document.querySelectorAll('#teclado button').forEach(b=>b.disabled = true);
+    }
   }
 }
 
 document.getElementById('btn-reiniciar-adivina').addEventListener('click', iniciarAdivina);
+
+document.addEventListener('keydown', e=>{
+  if(!document.getElementById('adivina').classList.contains('activo')) return;
+  const letra = e.key.toUpperCase();
+  const btn = botonesLetra[letra];
+  if(btn) probarLetra(letra, btn);
+});
 
 /* ---------- SOPA: ENCUENTRA A PEWEN ---------- */
 const filasSopa = [
@@ -325,25 +464,32 @@ const filasSopa = [
   'ABCDEFG',
 ];
 const objetivoSopa = 'PEWEN';
-let seleccionSopa = '';
+// La palabra PEWEN vive en las primeras 5 celdas de la fila 0 (índices 0-4 del grid aplanado).
+const rutaSopa = [0,1,2,3,4];
+let pasoSopa = 0;
 
 function iniciarSopa(){
   const grid = document.getElementById('grid-sopa');
   const msg = document.getElementById('msg-sopa');
   msg.textContent = '';
-  seleccionSopa = '';
+  pasoSopa = 0;
   grid.innerHTML = '';
-  filasSopa.join('').split('').forEach(ch=>{
+  filasSopa.join('').split('').forEach((ch,idx)=>{
     const c = document.createElement('div');
     c.className = 'celda';
     c.textContent = ch;
+    c.dataset.idx = idx;
     c.addEventListener('click', ()=>{
       if(c.classList.contains('ok')) return;
-      c.classList.add('sel');
-      seleccionSopa += ch;
-      if(seleccionSopa.endsWith(objetivoSopa)){
-        document.querySelectorAll('.celda.sel').forEach(x=>x.classList.add('ok'));
-        msg.textContent = '¡Encontraste PEWEN, el árbol sagrado del pueblo mapuche! 🌲';
+      if(idx === rutaSopa[pasoSopa]){
+        c.classList.add('ok');
+        pasoSopa++;
+        if(pasoSopa === rutaSopa.length){
+          msg.textContent = '¡Encontraste PEWEN, el árbol sagrado del pueblo mapuche! 🌲';
+        }
+      }else{
+        c.classList.add('error');
+        setTimeout(()=>c.classList.remove('error'), 250);
       }
     });
     grid.appendChild(c);
@@ -352,10 +498,190 @@ function iniciarSopa(){
 
 document.getElementById('btn-reiniciar-sopa').addEventListener('click', iniciarSopa);
 
+/* ---------- ORDENA LA LEYENDA ---------- */
+// Sucesos en orden cronológico real de la leyenda (índice = orden correcto).
+const eventosLeyenda = [
+  'Treng Treng, la serpiente de la tierra, siente que algo malo va a pasar y avisa a la gente.',
+  'Kai Kai, la serpiente del mar, se enoja y hace que las aguas empiecen a subir.',
+  'La gente corre hacia el cerro Mawida para ponerse a salvo del agua.',
+  'Treng Treng hace crecer el cerro cada vez más alto para que el agua no alcance a la gente.',
+  'Kai Kai y Treng Treng luchan durante muchos días, moviendo el mar y la tierra.',
+  'Las aguas finalmente bajan y nace un nuevo paisaje de mares, ríos y montañas.'
+];
+
+let ordenPool = [], respuestaOrden = []; // respuestaOrden guarda el índice original de cada slot
+
+function barajarIndices(n){
+  const arr = [...Array(n).keys()];
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]] = [arr[j],arr[i]];
+  }
+  return arr;
+}
+
+function iniciarOrden(){
+  document.getElementById('msg-orden').textContent = '';
+  respuestaOrden = new Array(eventosLeyenda.length).fill(null);
+  ordenPool = barajarIndices(eventosLeyenda.length);
+  dibujarSlotsOrden();
+  dibujarPoolOrden();
+}
+
+function dibujarSlotsOrden(){
+  const cont = document.getElementById('respuesta-orden');
+  cont.innerHTML = respuestaOrden.map((val,i)=>{
+    const texto = val === null ? 'Toca un suceso de abajo…' : eventosLeyenda[val];
+    const lleno = val === null ? '' : 'lleno';
+    return `<div class="slot-orden ${lleno}" data-slot="${i}"><span class="num">${i+1}.</span><span>${texto}</span></div>`;
+  }).join('');
+}
+
+function dibujarPoolOrden(){
+  const cont = document.getElementById('pool-orden');
+  cont.innerHTML = ordenPool.map(i=>{
+    const usado = respuestaOrden.includes(i) ? 'usado' : '';
+    return `<button class="chip-orden ${usado}" data-idx="${i}">${eventosLeyenda[i]}</button>`;
+  }).join('');
+  cont.querySelectorAll('.chip-orden').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const idx = Number(btn.dataset.idx);
+      const espacio = respuestaOrden.indexOf(null);
+      if(espacio === -1) return;
+      respuestaOrden[espacio] = idx;
+      dibujarSlotsOrden();
+      dibujarPoolOrden();
+    });
+  });
+}
+
+document.getElementById('btn-revisar-orden').addEventListener('click', ()=>{
+  const msg = document.getElementById('msg-orden');
+  if(respuestaOrden.includes(null)){
+    msg.textContent = 'Te faltan sucesos por ubicar 🧐';
+    return;
+  }
+  const slots = document.querySelectorAll('.slot-orden');
+  let todoCorrecto = true;
+  respuestaOrden.forEach((val,i)=>{
+    const correcto = val === i;
+    slots[i].classList.add(correcto ? 'correcto' : 'incorrecto');
+    if(!correcto) todoCorrecto = false;
+  });
+  if(todoCorrecto){
+    msg.textContent = '¡Así es como cuentan la leyenda los mapuche! 🎉';
+  }else{
+    msg.textContent = 'Casi... revisa los sucesos en rojo y prueba de nuevo.';
+    setTimeout(()=>{
+      respuestaOrden = new Array(eventosLeyenda.length).fill(null);
+      dibujarSlotsOrden();
+      dibujarPoolOrden();
+    }, 1400);
+  }
+});
+
+document.getElementById('btn-reiniciar-orden').addEventListener('click', iniciarOrden);
+
+/* ---------- TRIVIA MAPUCHE ---------- */
+const preguntasFijasTrivia = [
+  {pregunta:'¿Quién es la serpiente del mar en la leyenda?', correcta:'Kai Kai', opciones:['Kai Kai','Treng Treng','Filu','Pewen']},
+  {pregunta:'¿Quién es la serpiente de la tierra en la leyenda?', correcta:'Treng Treng', opciones:['Kai Kai','Treng Treng','Ko','Antü']},
+  {pregunta:'¿Cómo se llama el árbol sagrado del pueblo mapuche?', correcta:'Pewen', opciones:['Pewen','Koyam','Mawida','Lafken']},
+  {pregunta:'¿Adónde sube la gente para escapar de la inundación?', correcta:'Al cerro Mawida', opciones:['Al cerro Mawida','Al mar Lafken','A la luna Küyen','Al río Ko']},
+];
+
+function barajar(arr){
+  const copia = [...arr];
+  for(let i=copia.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [copia[i],copia[j]] = [copia[j],copia[i]];
+  }
+  return copia;
+}
+
+function construirPreguntasTrivia(){
+  const deVocab = barajar(vocabMemoria).slice(0,4).map(v=>{
+    const distractores = barajar(vocabMemoria.filter(x=>x.mp!==v.mp)).slice(0,3).map(x=>x.es);
+    return {
+      pregunta: `¿Qué significa "${v.mp}" en mapudungun?`,
+      correcta: v.es,
+      opciones: barajar([v.es, ...distractores])
+    };
+  });
+  const fijas = barajar(preguntasFijasTrivia).map(p=>({...p, opciones:barajar(p.opciones)}));
+  return barajar([...deVocab, ...fijas]);
+}
+
+let preguntasTrivia = [], indiceTrivia = 0, puntajeTrivia = 0;
+
+function iniciarTrivia(){
+  preguntasTrivia = construirPreguntasTrivia();
+  indiceTrivia = 0;
+  puntajeTrivia = 0;
+  document.getElementById('msg-trivia').textContent = '';
+  document.getElementById('cuerpo-trivia').style.display = 'block';
+  document.getElementById('btn-siguiente-trivia').style.display = 'none';
+  mostrarPreguntaTrivia();
+}
+
+function mostrarPreguntaTrivia(){
+  const p = preguntasTrivia[indiceTrivia];
+  document.getElementById('progreso-trivia').textContent =
+    `Pregunta ${indiceTrivia+1} / ${preguntasTrivia.length} · Puntaje: ${puntajeTrivia}`;
+  document.getElementById('pregunta-trivia').textContent = p.pregunta;
+  document.getElementById('msg-trivia').textContent = '';
+  document.getElementById('btn-siguiente-trivia').style.display = 'none';
+
+  const cont = document.getElementById('opciones-trivia');
+  cont.innerHTML = '';
+  p.opciones.forEach(opcion=>{
+    const b = document.createElement('button');
+    b.className = 'opcion-trivia';
+    b.textContent = opcion;
+    b.addEventListener('click', ()=>responderTrivia(opcion, b));
+    cont.appendChild(b);
+  });
+}
+
+function responderTrivia(opcion, btn){
+  const p = preguntasTrivia[indiceTrivia];
+  document.querySelectorAll('.opcion-trivia').forEach(b=>{
+    b.disabled = true;
+    if(b.textContent === p.correcta) b.classList.add('correcta');
+  });
+  if(opcion === p.correcta){
+    puntajeTrivia++;
+    document.getElementById('msg-trivia').textContent = '¡Correcto! 🎉';
+  }else{
+    btn.classList.add('incorrecta');
+    document.getElementById('msg-trivia').textContent = 'Casi... la respuesta correcta es "' + p.correcta + '".';
+  }
+  document.getElementById('progreso-trivia').textContent =
+    `Pregunta ${indiceTrivia+1} / ${preguntasTrivia.length} · Puntaje: ${puntajeTrivia}`;
+  document.getElementById('btn-siguiente-trivia').style.display = 'block';
+}
+
+document.getElementById('btn-siguiente-trivia').addEventListener('click', ()=>{
+  indiceTrivia++;
+  if(indiceTrivia < preguntasTrivia.length){
+    mostrarPreguntaTrivia();
+  }else{
+    document.getElementById('cuerpo-trivia').style.display = 'none';
+    document.getElementById('btn-siguiente-trivia').style.display = 'none';
+    document.getElementById('progreso-trivia').textContent = '';
+    document.getElementById('msg-trivia').innerHTML =
+      `<span class="pantalla-final-trivia">🎉 ¡Terminaste! Puntaje final: ${puntajeTrivia} / ${preguntasTrivia.length}</span>`;
+  }
+});
+
+document.getElementById('btn-reiniciar-trivia').addEventListener('click', iniciarTrivia);
+
 /* ---------- INICIO ---------- */
 iniciarMemoria();
 iniciarAdivina();
 iniciarSopa();
+iniciarOrden();
+iniciarTrivia();
 </script>
 
 </body>
