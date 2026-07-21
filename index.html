@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Juegos Mapuche — Kai Kai y Treng Treng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --crema:#FFF7E6;
+    --tinta:#2B2620;
+    --sol:#FFC93C;
+    --cielo:#3AAED8;
+    --hierba:#4CAF7D;
+    --tierra:#FF7A3D;
+    --noche:#6E56E8;
+    --blanco:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--crema);
+    color:var(--tinta);
+    font-family:'Nunito',sans-serif;
+    font-size:18px;
+    line-height:1.5;
+  }
+  h1,h2,h3{font-family:'Baloo 2',sans-serif; font-weight:700; margin:0;}
+  .wrap{max-width:900px; margin:0 auto; padding:0 6vw 3rem;}
+
+  header.hero{padding:2.6rem 0 1.6rem; text-align:center;}
+  .hero-badge{
+    display:inline-block; font-family:'Baloo 2',sans-serif;
+    background:var(--sol); border:3px solid var(--tinta); border-radius:999px;
+    padding:0.35rem 1rem; font-size:0.85rem; font-weight:700;
+    box-shadow:3px 3px 0 var(--tinta); margin-bottom:1rem;
+  }
+  h1{font-size:clamp(1.8rem,6vw,2.6rem); line-height:1.1;}
+  h1 span.a{color:var(--cielo);}
+  h1 span.b{color:var(--tierra);}
+  header.hero p{max-width:52ch; margin:0.9rem auto 0; font-weight:600; color:#5c5548;}
+
+  nav.tabs{
+    display:flex; gap:0.6rem; justify-content:center; flex-wrap:wrap;
+    margin:1.6rem 0 2rem;
+  }
+  .tab-btn{
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.95rem;
+    border:3px solid var(--tinta); border-radius:999px;
+    padding:0.55rem 1.2rem; background:var(--blanco); color:var(--tinta);
+    cursor:pointer; box-shadow:3px 3px 0 var(--tinta); transition:transform 0.12s;
+  }
+  .tab-btn:hover{transform:translate(-2px,-2px);}
+  .tab-btn.activo{background:var(--tierra); color:var(--blanco);}
+
+  .juego{display:none;}
+  .juego.activo{display:block;}
+  .panel-juego{
+    background:var(--blanco); border:4px solid var(--tinta); border-radius:26px;
+    padding:1.8rem; box-shadow:6px 6px 0 rgba(0,0,0,0.15);
+  }
+  .panel-juego h2{font-size:1.5rem; text-align:center;}
+  .panel-juego .sub{text-align:center; font-weight:700; color:#5c5548; margin-top:0.4rem; margin-bottom:1.4rem;}
+  .msg{
+    text-align:center; font-family:'Baloo 2',sans-serif; font-weight:700;
+    min-height:1.6rem; margin-top:1rem; color:var(--hierba);
+  }
+
+  /* ---------- MEMORIA ---------- */
+  #grid-memoria{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:0.7rem;
+    max-width:460px; margin:0 auto;
+  }
+  @media(max-width:480px){#grid-memoria{grid-template-columns:repeat(4,1fr); gap:0.45rem;}}
+  .carta-mem{
+    aspect-ratio:1/1; border-radius:16px; border:3px solid var(--tinta);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:1.6rem;
+    cursor:pointer; background:var(--noche); color:var(--crema);
+    box-shadow:3px 3px 0 rgba(0,0,0,0.2); text-align:center; padding:0.3rem;
+    user-select:none;
+  }
+  .carta-mem .dorso{font-size:1.4rem;}
+  .carta-mem.revelada{background:var(--sol); color:var(--tinta);}
+  .carta-mem.acertada{background:var(--hierba); color:var(--blanco); cursor:default;}
+  .carta-mem span.cara-txt{font-size:0.85rem; line-height:1.15;}
+
+  /* ---------- ADIVINA ---------- */
+  .pista{
+    text-align:center; font-weight:700; background:rgba(255,201,60,0.25);
+    border:2px dashed var(--tierra); border-radius:16px; padding:0.8rem 1rem;
+    margin-bottom:1.2rem;
+  }
+  #palabra-oculta{
+    text-align:center; font-family:'Baloo 2',sans-serif; font-weight:800;
+    font-size:clamp(1.6rem,6vw,2.4rem); letter-spacing:0.35em; margin-bottom:1.2rem;
+    color:var(--cielo);
+  }
+  #teclado{display:flex; flex-wrap:wrap; gap:0.4rem; justify-content:center;}
+  #teclado button{
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:1rem;
+    width:2.5rem; height:2.5rem; border-radius:10px; border:3px solid var(--tinta);
+    background:var(--blanco); cursor:pointer; box-shadow:2px 2px 0 var(--tinta);
+  }
+  #teclado button:disabled{opacity:0.35; cursor:default; box-shadow:none;}
+  #teclado button.correcta{background:var(--hierba); color:var(--blanco);}
+  #teclado button.incorrecta{background:#e5ddcc; color:#9a9284;}
+  .btn-reiniciar{
+    display:block; margin:1.4rem auto 0; font-family:'Baloo 2',sans-serif; font-weight:700;
+    border:3px solid var(--tinta); border-radius:999px; padding:0.5rem 1.3rem;
+    background:var(--cielo); color:var(--blanco); cursor:pointer; box-shadow:3px 3px 0 var(--tinta);
+  }
+
+  /* ---------- SOPA ---------- */
+  #grid-sopa{
+    display:grid; grid-template-columns:repeat(8,minmax(28px,1fr));
+    gap:4px; max-width:420px; margin:0 auto;
+  }
+  .celda{
+    aspect-ratio:1/1; display:flex; align-items:center; justify-content:center;
+    font-family:'Baloo 2',sans-serif; font-weight:700; font-size:0.95rem;
+    background:var(--crema); border:2px solid var(--tinta); border-radius:8px;
+    cursor:pointer; color:var(--tinta);
+  }
+  .celda.sel{background:var(--sol);}
+  .celda.ok{background:var(--hierba); color:var(--blanco);}
+
+  footer{text-align:center; padding:2rem 0; color:#9a9284; font-weight:700; font-size:0.9rem;}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="hero-badge">🐍⛰️🌊 ¡A jugar en mapudungun!</span>
+    <h1>Juega con <span class="a">Kai Kai</span> y <span class="b">Treng Treng</span></h1>
+    <p>Tres juegos para aprender palabras en mapudungun mientras recorres la leyenda de las serpientes que formaron las montañas.</p>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="tabs" id="tabs">
+    <button class="tab-btn activo" data-juego="memoria">🧠 Memoria del bosque</button>
+    <button class="tab-btn" data-juego="adivina">🔤 Adivina la palabra</button>
+    <button class="tab-btn" data-juego="sopa">🌲 Encuentra a Pewen</button>
+  </nav>
+
+  <!-- MEMORIA -->
+  <section class="juego activo" id="memoria">
+    <div class="panel-juego">
+      <h2>🧠 Memoria del bosque</h2>
+      <p class="sub">Encuentra cada par: el dibujo y su nombre en mapudungun.</p>
+      <div id="grid-memoria"></div>
+      <p class="msg" id="msg-memoria"></p>
+    </div>
+  </section>
+
+  <!-- ADIVINA -->
+  <section class="juego" id="adivina">
+    <div class="panel-juego">
+      <h2>🔤 Adivina la palabra</h2>
+      <p class="sub">Descubre la palabra mapuche letra por letra.</p>
+      <p class="pista" id="pista"></p>
+      <p id="palabra-oculta"></p>
+      <div id="teclado"></div>
+      <p class="msg" id="msg-adivina"></p>
+      <button class="btn-reiniciar" id="btn-reiniciar-adivina">🔄 Otra palabra</button>
+    </div>
+  </section>
+
+  <!-- SOPA -->
+  <section class="juego" id="sopa">
+    <div class="panel-juego">
+      <h2>🌲 Encuentra a Pewen</h2>
+      <p class="sub">Toca las letras en orden para formar <b>PEWEN</b>, la araucaria sagrada del pueblo mapuche.</p>
+      <div id="grid-sopa"></div>
+      <p class="msg" id="msg-sopa"></p>
+      <button class="btn-reiniciar" id="btn-reiniciar-sopa">🔄 Intentar de nuevo</button>
+    </div>
+  </section>
+</div>
+
+<footer>🦎 Juegos hechos para aprender y celebrar la lengua y las historias del pueblo mapuche.</footer>
+
+<script>
+/* ---------- NAVEGACIÓN ---------- */
+document.getElementById('tabs').addEventListener('click', e=>{
+  const btn = e.target.closest('.tab-btn');
+  if(!btn) return;
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('activo'));
+  document.querySelectorAll('.juego').forEach(s=>s.classList.remove('activo'));
+  btn.classList.add('activo');
+  document.getElementById(btn.dataset.juego).classList.add('activo');
+});
+
+/* ---------- MEMORIA DEL BOSQUE ---------- */
+const vocabMemoria = [
+  {mp:'mapu', es:'tierra', emoji:'🌍'},
+  {mp:'ko', es:'agua', emoji:'💧'},
+  {mp:'antü', es:'sol', emoji:'☀️'},
+  {mp:'küyen', es:'luna', emoji:'🌙'},
+  {mp:'lafken', es:'mar', emoji:'🌊'},
+  {mp:'mawida', es:'cerro', emoji:'⛰️'},
+  {mp:'filu', es:'serpiente', emoji:'🐍'},
+  {mp:'pewen', es:'araucaria', emoji:'🌲'},
+];
+
+let cartasMemoria = [], reveladas = [], bloqueado = false, paresOk = 0;
+
+function iniciarMemoria(){
+  const grid = document.getElementById('grid-memoria');
+  const msg = document.getElementById('msg-memoria');
+  msg.textContent = '';
+  paresOk = 0; reveladas = [];
+  cartasMemoria = vocabMemoria.flatMap((v,i)=>[
+    {key:i, tipo:'emoji', texto:v.emoji},
+    {key:i, tipo:'palabra', texto:v.mp}
+  ]).sort(()=>Math.random()-0.5);
+
+  grid.innerHTML = cartasMemoria.map((c,i)=>`
+    <div class="carta-mem" data-i="${i}">
+      <span class="dorso">🪶</span>
+    </div>
+  `).join('');
+
+  grid.querySelectorAll('.carta-mem').forEach(el=>{
+    el.addEventListener('click', ()=>voltearCarta(el));
+  });
+}
+
+function voltearCarta(el){
+  const i = Number(el.dataset.i);
+  if(bloqueado || el.classList.contains('revelada') || el.classList.contains('acertada')) return;
+
+  const dato = cartasMemoria[i];
+  el.classList.add('revelada');
+  el.innerHTML = `<span class="cara-txt">${dato.texto}</span>`;
+  reveladas.push({el, dato});
+
+  if(reveladas.length === 2){
+    bloqueado = true;
+    const [a,b] = reveladas;
+    if(a.dato.key === b.dato.key){
+      setTimeout(()=>{
+        a.el.classList.add('acertada'); b.el.classList.add('acertada');
+        a.el.classList.remove('revelada'); b.el.classList.remove('revelada');
+        reveladas = []; bloqueado = false; paresOk++;
+        if(paresOk === vocabMemoria.length){
+          document.getElementById('msg-memoria').textContent = '¡Muy bien! Encontraste todos los pares 🎉';
+        }
+      }, 500);
+    }else{
+      setTimeout(()=>{
+        a.el.classList.remove('revelada'); b.el.classList.remove('revelada');
+        a.el.innerHTML = '<span class="dorso">🪶</span>';
+        b.el.innerHTML = '<span class="dorso">🪶</span>';
+        reveladas = []; bloqueado = false;
+      }, 800);
+    }
+  }
+}
+
+/* ---------- ADIVINA LA PALABRA ---------- */
+const palabrasAdivina = [
+  {mp:'FILU', hint:'Serpiente 🐍 — como Kai Kai y Treng Treng'},
+  {mp:'MAPU', hint:'Tierra 🌍'},
+  {mp:'LAFKEN', hint:'Mar o lago 🌊 — el hogar de Kai Kai'},
+  {mp:'MAWIDA', hint:'Cerro o bosque ⛰️ — el hogar de Treng Treng'},
+  {mp:'PEWEN', hint:'Araucaria 🌲, el árbol sagrado'},
+  {mp:'KOYAM', hint:'Roble 🌳'},
+];
+
+let secreto = '', mostrado = [];
+
+function iniciarAdivina(){
+  const elegido = palabrasAdivina[Math.floor(Math.random()*palabrasAdivina.length)];
+  secreto = elegido.mp;
+  mostrado = [...secreto].map(()=> '_');
+  document.getElementById('pista').textContent = '💡 Pista: ' + elegido.hint;
+  document.getElementById('msg-adivina').textContent = '';
+  dibujarPalabra();
+
+  const teclado = document.getElementById('teclado');
+  teclado.innerHTML = '';
+  'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'.split('').forEach(letra=>{
+    const b = document.createElement('button');
+    b.textContent = letra;
+    b.addEventListener('click', ()=>probarLetra(letra, b));
+    teclado.appendChild(b);
+  });
+}
+
+function dibujarPalabra(){
+  document.getElementById('palabra-oculta').textContent = mostrado.join(' ');
+}
+
+function probarLetra(letra, btn){
+  btn.disabled = true;
+  let acierto = false;
+  [...secreto].forEach((c,i)=>{
+    if(c === letra){ mostrado[i] = letra; acierto = true; }
+  });
+  btn.classList.add(acierto ? 'correcta' : 'incorrecta');
+  dibujarPalabra();
+  if(mostrado.join('') === secreto){
+    document.getElementById('msg-adivina').textContent = '¡Correcto! ' + secreto + ' 🎉';
+    document.querySelectorAll('#teclado button').forEach(b=>b.disabled = true);
+  }
+}
+
+document.getElementById('btn-reiniciar-adivina').addEventListener('click', iniciarAdivina);
+
+/* ---------- SOPA: ENCUENTRA A PEWEN ---------- */
+const filasSopa = [
+  'PEWENAO',
+  'QWERTYU',
+  'ZXCVBNM',
+  'ASDFGHJ',
+  'POIUYTR',
+  'LKJHGFD',
+  'MNBVCXZ',
+  'ABCDEFG',
+];
+const objetivoSopa = 'PEWEN';
+let seleccionSopa = '';
+
+function iniciarSopa(){
+  const grid = document.getElementById('grid-sopa');
+  const msg = document.getElementById('msg-sopa');
+  msg.textContent = '';
+  seleccionSopa = '';
+  grid.innerHTML = '';
+  filasSopa.join('').split('').forEach(ch=>{
+    const c = document.createElement('div');
+    c.className = 'celda';
+    c.textContent = ch;
+    c.addEventListener('click', ()=>{
+      if(c.classList.contains('ok')) return;
+      c.classList.add('sel');
+      seleccionSopa += ch;
+      if(seleccionSopa.endsWith(objetivoSopa)){
+        document.querySelectorAll('.celda.sel').forEach(x=>x.classList.add('ok'));
+        msg.textContent = '¡Encontraste PEWEN, el árbol sagrado del pueblo mapuche! 🌲';
+      }
+    });
+    grid.appendChild(c);
+  });
+}
+
+document.getElementById('btn-reiniciar-sopa').addEventListener('click', iniciarSopa);
+
+/* ---------- INICIO ---------- */
+iniciarMemoria();
+iniciarAdivina();
+iniciarSopa();
+</script>
+
+</body>
+</html>
